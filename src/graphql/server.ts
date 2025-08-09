@@ -1,8 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { createYoga, createSchema } from 'graphql-yoga';
-import { typeDefs, resolvers } from './schema';
+import { createYoga } from 'graphql-yoga';
 import { verifyJwt } from '../modules/user/user.auth';
+import { createGraphQLSchema } from './gateway';
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ export async function createServer() {
   // Health check route
   app.get('/health', (_req, res) => res.send('OK'));
 
-  const schema = createSchema({ typeDefs, resolvers });
+  const schema = await createGraphQLSchema();
 
   const yoga = createYoga({
     schema,
