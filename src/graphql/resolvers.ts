@@ -1,0 +1,1 @@
+// Deprecated: resolvers are now split by domain and composed in src/graphql/schema.ts 

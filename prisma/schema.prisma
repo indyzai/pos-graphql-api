@@ -1,0 +1,122 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Store {
+  id             Int           @id @default(autoincrement())
+  name           String
+  addressId      Int?
+  organizationId Int
+  users          PosUser[]
+  products       Product[]
+  bills          Bill[]
+  createdAt      DateTime      @default(now())
+  purchaseBills  PurchaseBill[]
+}
+
+model PosUser {
+  id        Int      @id @default(autoincrement())
+  role      String   // 'admin' or 'cashier'
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  bills     Bill[]
+  store     Store?   @relation(fields: [storeId], references: [id])
+  storeId   Int?
+  addressId Int?
+  organizationId Int?
+  auditLogs PosAuditLog[]
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  barcode   String   @unique
+  price     Float
+  stock     Int      // legacy, can be deprecated
+  stockInPieces Int  @default(0)
+  stockInWeight Float @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  billItems BillItem[]
+  store     Store    @relation(fields: [storeId], references: [id])
+  storeId   Int
+  purchaseItems PurchaseItem[]
+  stockItems StockItem[]
+}
+
+model Bill {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  cashier   PosUser?    @relation(fields: [cashierId], references: [id])
+  cashierId Int?
+  items     BillItem[]
+  total     Float
+  discount  Float
+  tax       Float
+  store     Store    @relation(fields: [storeId], references: [id])
+  storeId   Int
+}
+
+model BillItem {
+  id        Int      @id @default(autoincrement())
+  bill      Bill     @relation(fields: [billId], references: [id])
+  billId    Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  price     Float
+}
+
+model PosAuditLog {
+  id        Int      @id @default(autoincrement())
+  user      PosUser?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model PurchaseBill {
+  id          Int             @id @default(autoincrement())
+  store       Store           @relation(fields: [storeId], references: [id])
+  storeId     Int
+  supplier    String
+  total       Float
+  processed   Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  items       PurchaseItem[]
+}
+
+model PurchaseItem {
+  id             Int           @id @default(autoincrement())
+  purchaseBill   PurchaseBill  @relation(fields: [purchaseBillId], references: [id])
+  purchaseBillId Int
+  product        Product       @relation(fields: [productId], references: [id])
+  productId      Int
+  quantity       Float         // e.g., 5.0 (kg)
+  unit           String        // e.g., 'kg', 'piece'
+  costPrice      Float
+  sellingPrice   Float
+  totalPrice     Float
+  allowPartialSplit Boolean    @default(false)
+  stockItems     StockItem[]
+}
+
+model StockItem {
+  id             Int           @id @default(autoincrement())
+  purchaseItem   PurchaseItem  @relation(fields: [purchaseItemId], references: [id])
+  purchaseItemId Int
+  product        Product       @relation(fields: [productId], references: [id])
+  productId      Int
+  pieceNumber    Int           // e.g., 1, 2, 3, ...
+  weight         Float?
+  createdAt      DateTime      @default(now())
+  sold           Boolean       @default(false)
+}

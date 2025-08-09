@@ -1,0 +1,68 @@
+import { gql } from 'graphql-tag';
+
+const inventoryTypeDefs = gql`
+  type PurchaseBill {
+    id: ID!
+    storeId: Int!
+    supplier: String!
+    total: Float!
+    processed: Boolean!
+    createdAt: String!
+    items: [PurchaseItem!]!
+  }
+
+  type PurchaseItem {
+    id: ID!
+    purchaseBillId: Int!
+    productId: Int!
+    quantity: Float!
+    unit: String!
+    costPrice: Float!
+    sellingPrice: Float!
+    totalPrice: Float!
+    allowPartialSplit: Boolean!
+    stockItems: [StockItem!]!
+  }
+
+  type StockItem {
+    id: ID!
+    purchaseItemId: Int!
+    productId: Int!
+    pieceNumber: Int!
+    weight: Float
+    createdAt: String!
+    sold: Boolean!
+  }
+
+  extend type Query {
+    purchaseBills: [PurchaseBill!]!
+    purchaseBill(id: Int!): PurchaseBill
+    purchaseItems(billId: Int!): [PurchaseItem!]!
+    stockItems(purchaseItemId: Int!): [StockItem!]!
+  }
+
+  extend type Mutation {
+    createPurchaseBill(supplier: String!, items: [PurchaseItemInput!]!): PurchaseBill!
+    splitPurchaseItem(purchaseItemId: Int!, stockItems: [StockItemInput!]!): [StockItem!]!
+    processPurchaseBill(billId: Int!): PurchaseBill!
+  }
+
+  input PurchaseItemInput {
+    productId: Int!
+    quantity: Float!
+    unit: String!
+    costPrice: Float!
+    sellingPrice: Float!
+    totalPrice: Float!
+    allowPartialSplit: Boolean
+  }
+
+  input StockItemInput {
+    purchaseItemId: Int!
+    productId: Int!
+    pieceNumber: Int!
+    weight: Float
+  }
+`;
+
+export default inventoryTypeDefs;
