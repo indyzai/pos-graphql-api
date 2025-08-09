@@ -1,6 +1,6 @@
 import { gql } from 'graphql-tag';
 
-const billingTypeDefs = gql`
+const billingTypeDefs = /* GraphQL */ `
   type BillItem {
     id: ID!
     product: Product!

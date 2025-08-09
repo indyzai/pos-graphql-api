@@ -1,6 +1,6 @@
 import { gql } from 'graphql-tag';
 
-const inventoryTypeDefs = gql`
+const inventoryTypeDefs = /* GraphQL */ `
   type PurchaseBill {
     id: ID!
     storeId: Int!

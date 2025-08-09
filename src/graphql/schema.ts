@@ -12,6 +12,7 @@ import storeTypeDefs from '../modules/store/store.schema';
 import storeResolvers from '../modules/store/store.resolver';
 import auditTypeDefs from '../modules/audit/audit.schema';
 import auditResolvers from '../modules/audit/audit.resolver';
+import { print } from 'graphql';
 // import other domain schemas and resolvers as you split them out
 
 export const typeDefs = mergeTypeDefs([
@@ -25,7 +26,17 @@ export const typeDefs = mergeTypeDefs([
   // other domain typeDefs
 ]);
 
+const federationResolvers = {
+  Query: {
+    _sdl: () => print(typeDefs),
+    _service: () => ({
+      sdl: print(typeDefs),
+    }),
+  },
+};
+
 export const resolvers = mergeResolvers([
+  federationResolvers,
   billingResolvers,
   userResolvers,
   productResolvers,

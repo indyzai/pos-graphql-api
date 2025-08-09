@@ -1,6 +1,6 @@
 import { gql } from 'graphql-tag';
 
-const productTypeDefs = gql`
+const productTypeDefs = /* GraphQL */ `
   type Product {
     id: ID!
     name: String!

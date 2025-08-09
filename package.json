@@ -19,12 +19,15 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.12.0"
+    "prisma": "^6.12.0",
+    "graphql-yoga": "^5.7.0",
+    "@graphql-tools/stitch": "^9.0.0",
+    "@graphql-tools/stitching-directives": "^3.0.0",
+    "@graphql-tools/executor-http": "^1.0.0",
+    "graphql": "^16.11.0"
   },
   "devDependencies": {
     "@apollo/client": "^3.13.8",
-    "@apollo/server": "^5.0.0",
-    "@as-integrations/express5": "^1.1.2",
     "@graphql-tools/mock": "^9.0.25",
     "@graphql-tools/schema": "^10.0.25",
     "@graphql-tools/utils": "^10.9.1",
@@ -33,7 +36,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.0.15",
     "cross-fetch": "^4.1.0",
-    "graphql": "^16.11.0",
     "jest": "^30.0.5",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
