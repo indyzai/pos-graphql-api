@@ -87,6 +87,7 @@ const billingResolvers = {
   Bill: {
     items: (parent: any) => prisma.billItem.findMany({ where: { billId: parent.id }, include: { product: true } }),
     cashier: (parent: any) => parent.cashierId ? prisma.posUser.findUnique({ where: { id: parent.cashierId } }) : null,
+    store: (parent: any) => prisma.store.findUnique({ where: { id: parent.storeId } }),
   },
   BillItem: {
     product: (parent: any) => prisma.product.findUnique({ where: { id: parent.productId } }),

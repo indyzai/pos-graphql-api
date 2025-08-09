@@ -25,12 +25,12 @@ const productResolvers = {
   Mutation: {
     createProduct: async (_parent: any, args: any, context: any) => {
       requireAdmin(context);
-      const { name, barcode, price, stock } = args;
+      const { name, barcode, price, stock = 0, stockInPieces = 0, stockInWeight = 0 } = args;
       const product = await prisma.product.create({
-        data: { name, barcode, price, stock, storeId: context.storeId },
+        data: { name, barcode, price, stock, stockInPieces, stockInWeight, storeId: context.storeId },
       });
       // Audit log for product creation
-      await prisma.auditLog.create({
+      await prisma.posAuditLog.create({
         data: {
           userId: context.user.id,
           action: 'CREATE_PRODUCT',
@@ -47,7 +47,7 @@ const productResolvers = {
         data,
       });
       // Audit log for product update
-      await prisma.auditLog.create({
+      await prisma.posAuditLog.create({
         data: {
           userId: context.user.id,
           action: 'UPDATE_PRODUCT',
@@ -62,7 +62,7 @@ const productResolvers = {
       const product = await prisma.product.findUnique({ where: { id: productId, storeId: context.storeId } });
       await prisma.product.delete({ where: { id: productId, storeId: context.storeId } });
       // Audit log for product deletion
-      await prisma.auditLog.create({
+      await prisma.posAuditLog.create({
         data: {
           userId: context.user.id,
           action: 'DELETE_PRODUCT',
@@ -71,6 +71,12 @@ const productResolvers = {
       });
       return true;
     },
+  },
+  Product: {
+    store: (parent: any) => prisma.store.findUnique({ where: { id: parent.storeId } }),
+    billItems: (parent: any) => prisma.billItem.findMany({ where: { productId: parent.id } }),
+    purchaseItems: (parent: any) => prisma.purchaseItem.findMany({ where: { productId: parent.id } }),
+    stockItems: (parent: any) => prisma.stockItem.findMany({ where: { productId: parent.id } }),
   },
 };
 

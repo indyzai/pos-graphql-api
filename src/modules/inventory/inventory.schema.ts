@@ -4,6 +4,7 @@ const inventoryTypeDefs = gql`
   type PurchaseBill {
     id: ID!
     storeId: Int!
+    store: Store!
     supplier: String!
     total: Float!
     processed: Boolean!
@@ -13,7 +14,9 @@ const inventoryTypeDefs = gql`
 
   type PurchaseItem {
     id: ID!
+    purchaseBill: PurchaseBill!
     purchaseBillId: Int!
+    product: Product!
     productId: Int!
     quantity: Float!
     unit: String!
@@ -26,7 +29,9 @@ const inventoryTypeDefs = gql`
 
   type StockItem {
     id: ID!
+    purchaseItem: PurchaseItem!
     purchaseItemId: Int!
+    product: Product!
     productId: Int!
     pieceNumber: Int!
     weight: Float

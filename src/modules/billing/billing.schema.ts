@@ -11,7 +11,10 @@ const billingTypeDefs = gql`
   type Bill {
     id: ID!
     createdAt: String!
-    cashier: User
+    cashier: PosUser
+    cashierId: Int
+    storeId: Int!
+    store: Store!
     items: [BillItem!]!
     total: Float!
     discount: Float!

@@ -12,9 +12,9 @@ datasource db {
 model Store {
   id             Int           @id @default(autoincrement())
   name           String
-  addressId      Int?
-  organizationId Int
-  users          PosUser[]
+  organizationId Int           // references Organization from external service
+  addressId      Int?          // references Address from external service
+  posUsers       PosUser[]
   products       Product[]
   bills          Bill[]
   createdAt      DateTime      @default(now())
@@ -22,16 +22,18 @@ model Store {
 }
 
 model PosUser {
-  id        Int      @id @default(autoincrement())
-  role      String   // 'admin' or 'cashier'
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  bills     Bill[]
-  store     Store?   @relation(fields: [storeId], references: [id])
-  storeId   Int?
-  addressId Int?
-  organizationId Int?
-  auditLogs PosAuditLog[]
+  id             Int      @id @default(autoincrement())
+  userId         Int      // references User from external service
+  role           String   // 'admin' or 'cashier'
+  isActive       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  bills          Bill[]
+  store          Store?   @relation(fields: [storeId], references: [id])
+  storeId        Int?
+  organizationId Int?     // references Organization from external service
+  addressId      Int?     // references Address from external service
+  auditLogs      PosAuditLog[]
+  authKeys       AuthKey[]
 }
 
 model Product {
@@ -119,4 +121,15 @@ model StockItem {
   weight         Float?
   createdAt      DateTime      @default(now())
   sold           Boolean       @default(false)
+}
+
+model AuthKey {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  type      String   // 'reset', 'activation', etc.
+  posUserId Int      // references PosUser.id in this service
+  posUser   PosUser  @relation(fields: [posUserId], references: [id])
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
 }

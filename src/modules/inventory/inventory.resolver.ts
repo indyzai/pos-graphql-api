@@ -108,6 +108,19 @@ const inventoryResolvers = {
       return updatedBill;
     },
   },
+  PurchaseBill: {
+    store: (parent: any) => prisma.store.findUnique({ where: { id: parent.storeId } }),
+    items: (parent: any) => prisma.purchaseItem.findMany({ where: { purchaseBillId: parent.id } }),
+  },
+  PurchaseItem: {
+    purchaseBill: (parent: any) => prisma.purchaseBill.findUnique({ where: { id: parent.purchaseBillId } }),
+    product: (parent: any) => prisma.product.findUnique({ where: { id: parent.productId } }),
+    stockItems: (parent: any) => prisma.stockItem.findMany({ where: { purchaseItemId: parent.id } }),
+  },
+  StockItem: {
+    purchaseItem: (parent: any) => prisma.purchaseItem.findUnique({ where: { id: parent.purchaseItemId } }),
+    product: (parent: any) => prisma.product.findUnique({ where: { id: parent.productId } }),
+  },
 };
 
 export default inventoryResolvers;
