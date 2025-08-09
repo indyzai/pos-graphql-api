@@ -1,16 +1,11 @@
-// Supabase Edge Function: proxy to Supabase GraphQL service
-// Expects environment variables:
-// - SUPABASE_URL (e.g., https://<project-ref>.supabase.co)
-// - SUPABASE_ANON_KEY (public anon key)
-// Optionally:
-// - SUPABASE_GRAPHQL_URL (override, defaults to `${SUPABASE_URL}/graphql/v1`)
-// - SUPABASE_SERVICE_ROLE_KEY (if you choose to force server-side privileges; not used by default)
+// Supabase Edge Function: proxy to your GraphQL server (uses graphql/server execution)
+// Required env: UPSTREAM_GRAPHQL_URL (e.g., https://your-node-api.example.com/graphql)
 
 function createCorsHeaders(origin: string | null): Headers {
   const headers = new Headers();
   headers.set("access-control-allow-origin", origin ?? "*");
   headers.set("access-control-allow-methods", "POST, OPTIONS");
-  headers.set("access-control-allow-headers", "authorization, apikey, content-type");
+  headers.set("access-control-allow-headers", "authorization, content-type");
   headers.set("access-control-max-age", "86400");
   return headers;
 }
@@ -32,13 +27,11 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const graphqlUrl = Deno.env.get("SUPABASE_GRAPHQL_URL") || (supabaseUrl ? `${supabaseUrl}/graphql/v1` : undefined);
+  const upstreamUrl = Deno.env.get("UPSTREAM_GRAPHQL_URL") || undefined;
 
-  if (!graphqlUrl || !anonKey) {
+  if (!upstreamUrl) {
     return new Response(
-      JSON.stringify({ error: "Missing required env: SUPABASE_URL (or SUPABASE_GRAPHQL_URL) and SUPABASE_ANON_KEY" }),
+      JSON.stringify({ error: "UPSTREAM_GRAPHQL_URL is not configured" }),
       {
         status: 500,
         headers: new Headers({
@@ -49,21 +42,19 @@ Deno.serve(async (req: Request) => {
     );
   }
 
-  // Prefer passing through the client's Authorization if provided; fallback to anon.
   const incomingAuth = req.headers.get("authorization");
-  const authorization = incomingAuth || `Bearer ${anonKey}`;
 
   const outboundHeaders = new Headers();
   outboundHeaders.set("content-type", "application/json");
-  outboundHeaders.set("apikey", anonKey);
-  outboundHeaders.set("authorization", authorization);
+  if (incomingAuth) {
+    outboundHeaders.set("authorization", incomingAuth);
+  }
 
-  // Forward the raw request body to avoid JSON re-parse/re-stringify overhead
   const bodyText = await req.text();
 
   let upstreamResponse: Response;
   try {
-    upstreamResponse = await fetch(graphqlUrl, {
+    upstreamResponse = await fetch(upstreamUrl, {
       method: "POST",
       headers: outboundHeaders,
       body: bodyText,
