@@ -1,0 +1,46 @@
+name: Deploy Supabase Edge Function
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Supabase CLI
+        run: |
+          npm i -g supabase@latest
+
+      - name: Set Edge Function secrets
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          UPSTREAM_GRAPHQL_URL: ${{ secrets.UPSTREAM_GRAPHQL_URL }}
+        run: |
+          set -e
+          supabase secrets set \
+            --project-ref "$SUPABASE_PROJECT_REF" \
+            SUPABASE_URL="https://$SUPABASE_PROJECT_REF.supabase.co" \
+            SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+          if [ -n "$UPSTREAM_GRAPHQL_URL" ]; then
+            supabase secrets set --project-ref "$SUPABASE_PROJECT_REF" UPSTREAM_GRAPHQL_URL="$UPSTREAM_GRAPHQL_URL"
+          fi
+
+      - name: Deploy function `graphql`
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          supabase functions deploy graphql --project-ref "$SUPABASE_PROJECT_REF"
