@@ -1,6 +1,5 @@
-import { gql } from 'graphql-tag';
 
-const storeTypeDefs = gql`
+const storeTypeDefs = /* GraphQL */ `
   type Store {
     id: ID!
     name: String!

@@ -1,6 +1,6 @@
 import { gql } from 'graphql-tag';
 
-const auditTypeDefs = gql`
+const auditTypeDefs = /* GraphQL */ `
   type PosAuditLog {
     id: ID!
     user: PosUser

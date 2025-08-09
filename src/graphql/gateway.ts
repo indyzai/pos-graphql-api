@@ -34,10 +34,10 @@ async function buildRemoteSubschema(config: FederatedServiceConfig, stitchingSDL
  * FEDERATED_SERVICES should be a comma-separated list of URLs.
  */
 export async function createGraphQLSchema(): Promise<GraphQLSchema> {
-  const { stitchingDirectivesTransformer, typeDefs: stitchingTypeDefs } = stitchingDirectives();
+  const { stitchingDirectivesTransformer } = stitchingDirectives();
 
   const localSchema = createSchema({
-    typeDefs: [stitchingTypeDefs, typeDefs],
+    typeDefs: [typeDefs],
     resolvers,
   });
 

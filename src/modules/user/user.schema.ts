@@ -1,6 +1,5 @@
-import { gql } from 'graphql-tag';
 
-const userTypeDefs = gql`
+const userTypeDefs = /* GraphQL */ `
   type PosUser {
     id: ID!
     userId: Int! # references User from external service
@@ -15,33 +14,29 @@ const userTypeDefs = gql`
     createdAt: String!
   }
 
-  type AuthPayload {
-    token: String!
-    user: PosUser!
-  }
 
   extend type Query {
-    me: PosUser
-    users: [PosUser!]! # admin only
-    user(id: ID!): PosUser # admin only
+    posMe: PosUser
+    posUsers: [PosUser!]! # admin only
+    posUser(id: ID!): PosUser # admin only
   }
 
   extend type Mutation {
-    createUser(
+    createPosUser(
       userId: Int!
       role: String!
       storeId: Int!
       organizationId: Int
       addressId: Int
     ): PosUser! # admin only
-    updateUser(
+    updatePosUser(
       id: ID!
       role: String
       isActive: Boolean
       organizationId: Int
       addressId: Int
     ): PosUser! # admin only
-    deleteUser(id: ID!): Boolean! # admin only
+    deletePosUser(id: ID!): Boolean! # admin only
   }
 `;
 

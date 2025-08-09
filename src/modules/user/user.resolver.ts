@@ -11,21 +11,21 @@ function requireAdmin(context: any) {
 
 const userResolvers = {
   Query: {
-    me: async (_parent: any, _args: any, context: any) => {
+    posMe: async (_parent: any, _args: any, context: any) => {
       if (!context.user) return null;
-      return prisma.posUser.findUnique({ where: { id: context.user.id, storeId: context.storeId } });
+      return prisma.posUser.findUnique({ where: { userId: context.user.id, storeId: context.storeId } });
     },
-    users: async (_parent: any, _args: any, context: any) => {
+    posUsers: async (_parent: any, _args: any, context: any) => {
       requireAdmin(context);
       return prisma.posUser.findMany({ where: { storeId: context.storeId } });
     },
-    user: async (_parent: any, args: any, context: any) => {
+    posUser: async (_parent: any, args: any, context: any) => {
       requireAdmin(context);
       return prisma.posUser.findUnique({ where: { id: Number(args.id), storeId: context.storeId } });
     },
   },
   Mutation: {
-    createUser: async (_parent: any, args: any, context: any) => {
+    createPosUser: async (_parent: any, args: any, context: any) => {
       requireAdmin(context);
       const { userId, role, storeId, organizationId, addressId } = args;
       
@@ -57,7 +57,7 @@ const userResolvers = {
       });
       return user;
     },
-    updateUser: async (_parent: any, args: any, context: any) => {
+    updatePosUser: async (_parent: any, args: any, context: any) => {
       requireAdmin(context);
       const { id, ...data } = args;
       if (data.password) delete data.password; // Don't allow password update here
@@ -66,7 +66,7 @@ const userResolvers = {
         data,
       });
     },
-    deleteUser: async (_parent: any, args: any, context: any) => {
+    deletePosUser: async (_parent: any, args: any, context: any) => {
       requireAdmin(context);
       await prisma.posUser.delete({ where: { id: Number(args.id) } });
       return true;
