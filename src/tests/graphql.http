@@ -1,0 +1,255 @@
+# GraphQL HTTP Test Suite (VSCode REST Client)
+
+@host = http://localhost:4000/graphql
+@user_email = test@gmail.com
+@user_password = 12345678
+
+### 1. Register (Cashier/User)
+POST {{ host }}
+Content-Type: application/json
+# X-REQUEST-TYPE: GraphQL
+
+{
+  "query": "mutation Register($email: String!, $password: String!, $name: String!, $role: String!, $storeId: Int!) { register(email: $email, password: $password, name: $name, role: $role, storeId: $storeId) { token user { id email name role } } }",
+  "variables": {
+    "email": "user@example.com",
+    "password": "pass",
+    "name": "User",
+    "role": "cashier",
+    "storeId": 1
+  }
+}
+
+### 2. Login as Admin and store token
+# @name login
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation Login($email: String!, $password: String!) { login(email: $email, password: $password) { token user { id email name role } } }",
+  "variables": {
+    "email": "admin@example.com",
+    "password": "newpass"
+  }
+}
+
+###
+
+@token = {{login.response.body.data.login.token}}
+
+### 3. Organization Onboarding: Create Organization With Admin
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { createOrganizationWithAdmin(name: \"My Org\", address: { line1: \"123 Main St\", city: \"City\", state: \"State\", country: \"Country\", postalCode: \"12345\" }, gst: \"GSTIN1234\", adminUser: { email: \"admin@example.com\", channel: EMAIL }) { id name address { line1 city } } }"
+}
+
+### 4. Onboarding: Resend Verification Key
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { resendUserVerification(userId: 1, channel: EMAIL) }"
+}
+
+### 5. Onboarding: Verify User Account
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { verifyUserAccount(userId: 1, key: \"the-key-from-email\", password: \"newpass\") }"
+}
+
+### 6. Password Reset: Request
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { requestPasswordReset(email: \"user@example.com\") }"
+}
+
+### 7. Password Reset: Complete
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { resetPassword(email: \"user@example.com\", key: \"reset-key-from-email\", newPassword: \"newpass\") }"
+}
+
+### 8. Generate Auth Key (Organization)
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation GenerateKey($type: String!, $targets: [NotificationTargetInput!]!) { generateAuthKey(type: $type, targets: $targets) }",
+  "variables": {
+    "type": "organization",
+    "targets": [
+      { "channel": "EMAIL", "recipient": "admin@example.com" }
+    ]
+  }
+}
+
+### 8. Generate Auth Key (Store)
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation GenerateKey($type: String!, $targets: [NotificationTargetInput!]!) { generateAuthKey(type: $type, targets: $targets) }",
+  "variables": {
+    "type": "store",
+    "organizationId": 1,
+    "targets": [
+      { "channel": "EMAIL", "recipient": "admin@example.com" }
+    ]
+  }
+}
+
+### 9. Create Store
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation CreateStore($organizationId: Int!, $name: String!, $address: AddressInput!, $authKey: String!) { createStore(organizationId: $organizationId, name: $name, address: $address, authKey: $authKey) { id name address { line1 city } } }",
+  "variables": {
+    "organizationId": 1,
+    "name": "Store 1",
+    "address": {
+      "line1": "456 Market St",
+      "city": "City",
+      "state": "State",
+      "country": "Country",
+      "postalCode": "67890"
+    },
+    "authKey": "9qg3zxyb459"
+  }
+}
+
+### 10. Create User (Admin Only)
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation CreateUser($email: String!, $password: String!, $name: String!, $role: String!, $storeId: Int!, $address: AddressInput) { createUser(email: $email, password: $password, name: $name, role: $role, storeId: $storeId, address: $address) { id email name role address { line1 city } } }",
+  "variables": {
+    "email": "cashier@example.com",
+    "password": "pass",
+    "name": "Cashier",
+    "role": "cashier",
+    "storeId": 1,
+    "address": {
+      "line1": "789 Elm St",
+      "city": "City",
+      "state": "State",
+      "country": "Country",
+      "postalCode": "11111"
+    }
+  }
+}
+
+### 11. Create Bill
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation CreateBill($items: [BillItemInput!]!, $discount: Float, $tax: Float) { createBill(items: $items, discount: $discount, tax: $tax) { id total items { product { name } quantity price } cashier { id name } } }",
+  "variables": {
+    "items": [
+      { "productId": 1, "quantity": 2, "price": 100 },
+      { "productId": 2, "quantity": 1, "price": 50 }
+    ],
+    "discount": 10,
+    "tax": 5
+  }
+}
+
+### 12. Create Purchase Bill
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation CreatePurchaseBill($supplier: String!, $items: [PurchaseItemInput!]!) { createPurchaseBill(supplier: $supplier, items: $items) { id supplier items { id productId quantity unit costPrice sellingPrice totalPrice allowPartialSplit } } }",
+  "variables": {
+    "supplier": "Supplier Name",
+    "items": [
+      { "productId": 1, "quantity": 5, "unit": "kg", "costPrice": 100, "sellingPrice": 120, "totalPrice": 500, "allowPartialSplit": true }
+    ]
+  }
+}
+
+### 13. Split Purchase Item
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation SplitPurchaseItem($purchaseItemId: Int!, $stockItems: [StockItemInput!]!) { splitPurchaseItem(purchaseItemId: $purchaseItemId, stockItems: $stockItems) { id pieceNumber weight } }",
+  "variables": {
+    "purchaseItemId": 1,
+    "stockItems": [
+      { "purchaseItemId": 1, "productId": 1, "pieceNumber": 1, "weight": 2.5 },
+      { "purchaseItemId": 1, "productId": 1, "pieceNumber": 2, "weight": 2.5 }
+    ]
+  }
+}
+
+### 14. Process Purchase Bill
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "mutation ProcessPurchaseBill($billId: Int!) { processPurchaseBill(billId: $billId) { id processed } }",
+  "variables": {
+    "billId": 1
+  }
+}
+
+### 15. Query Bills
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "query { bills { id total items { product { name } quantity price } cashier { id name } } }"
+}
+
+### 16. Query Purchase Bills
+POST {{ host }}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "query": "query { purchaseBills { id supplier items { id productId quantity stockItems { id pieceNumber weight sold } } } }"
+}
+
+### 17. Error: Invalid Login
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { login(email: \"wrong@example.com\", password: \"wrongpass\") { token user { id } } }"
+}
+
+### 18. Error: Used or Invalid Key
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { verifyUserAccount(userId: 1, key: \"used-or-wrong-key\", password: \"newpass\") }"
+}
+
+### 19. Error: Unauthorized (no token)
+POST {{ host }}
+Content-Type: application/json
+
+{
+  "query": "mutation { createUser(email: \"unauth@example.com\", password: \"pass\", name: \"NoAuth\", role: \"cashier\", storeId: 1, address: { line1: \"A\", city: \"B\", state: \"C\", country: \"D\", postalCode: \"E\" }) { id } }"
+} 
